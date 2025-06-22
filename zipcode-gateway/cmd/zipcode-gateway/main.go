@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -12,12 +11,7 @@ import (
 )
 
 func main() {
-	collectorURL := os.Getenv("OTEL_COLLECTOR_URL")
-	fmt.Println("OTEL_COLLECTOR_URL:", collectorURL)
-	if collectorURL == "" {
-		collectorURL = "localhost:4318"
-	}
-	shutdown, err := tracing.InitTracer("zipcode-gateway", collectorURL)
+	shutdown, err := tracing.InitTracer("zipcode-gateway")
 	if err != nil {
 		log.Fatalf("failed to initialize tracer: %v", err)
 	}
@@ -28,7 +22,7 @@ func main() {
 }
 
 func startServer(weatherAPIURL string) {
-	server := webserver.NewWebServer("127.0.0.1:8080")
+	server := webserver.NewWebServer(":8080")
 	handler := web.NewWebWeatherHandler(weatherAPIURL)
 	server.AddHandler("/zipcode", handler.ZipcodeHandler)
 

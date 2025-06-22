@@ -1,19 +1,40 @@
+version: '3.8'
+
 networks:
   weather-api:
 
 services:
-  zipkin:
-    image: openzipkin/zipkin:latest
-    container_name: zipkin
+  zipcode-gateway:
+    build:
+      context: .
+      dockerfile: zipcode-gateway/Dockerfile
     ports:
-      - "9411:9411"
+      - "8080:8080"
     networks:
       - weather-api
     environment:
-      - STORAGE_TYPE=mem
+      - WEATHER_API_URL=http://zipcode-weather-api:8081
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+    depends_on:
+      - zipcode-weather-api
+      - otel-collector
+
+  zipcode-weather-api:
+    build:
+      context: .
+      dockerfile: zipcode-weather-api/Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - weather-api
+    environment:
+      - WEATHER_API_KEY=${WEATHER_API_KEY}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+    depends_on:
+      - otel-collector
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
+    image: otel/opentelemetry-collector-contrib:0.99.0
     hostname: otel-collector
     container_name: otel-collector
     command: ["--config=/etc/otel-collector-config.yaml"]
@@ -21,7 +42,18 @@ services:
       - ./docker-config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
       - "4318:4318"   # OTLP HTTP
+      - "4317:4317"   # OTLP gRPC
     networks:
       - weather-api
     depends_on:
       - zipkin
+
+  zipkin:
+    image: openzipkin/zipkin:2.24
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - weather-api
+    environment:
+      - STORAGE_TYPE=mem

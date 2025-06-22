@@ -11,10 +11,9 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
-func InitTracer(serviceName, collectorURL string) (func(context.Context) error, error) {
+func InitTracer(serviceName string) (func(context.Context) error, error) {
 	exporter, err := gootelexportotlp.New(
 		context.Background(),
-		gootelexportotlp.WithEndpoint(collectorURL),
 		gootelexportotlp.WithInsecure(),
 	)
 	if err != nil {
