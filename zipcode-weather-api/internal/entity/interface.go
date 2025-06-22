@@ -1,9 +1,11 @@
 package entity
 
+import "context"
+
 type ZipcodeRepositoryInterface interface {
-	Get(string) (Zipcode, error)
+	Get(context.Context, string) (Zipcode, error)
 }
 
 type WeatherRepositoryInterface interface {
-	GetByCityName(string) (Weather, error)
+	GetByCityName(context.Context, string) (Weather, error)
 }

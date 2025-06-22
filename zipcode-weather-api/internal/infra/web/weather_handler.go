@@ -38,7 +38,7 @@ func (h *WebWeatherHandler) Fetch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	getZipcodeUseCase := usecase.NewGetZipcodeUseCase(h.ZipcodeRepository)
-	getZipcodeOutput, err := getZipcodeUseCase.Execute(getZipcodeInput)
+	getZipcodeOutput, err := getZipcodeUseCase.Execute(r.Context(), getZipcodeInput)
 
 	if err != nil {
 		if err.Error() == "invalid zipcode" {
@@ -58,7 +58,7 @@ func (h *WebWeatherHandler) Fetch(w http.ResponseWriter, r *http.Request) {
 		CityName: getZipcodeOutput.Localidade,
 	}
 	getWeatherUseCase := usecase.NewGetWeatherUseCase(h.WeatherRepository)
-	getWeatherOutput, err := getWeatherUseCase.Execute(getWeatherInput)
+	getWeatherOutput, err := getWeatherUseCase.Execute(r.Context(), getWeatherInput)
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error fetching weather: %v", err), http.StatusInternalServerError)

@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/zaccaron07/goexpert-weather-api-lab02/zipcode-gateway/internal/entity"
 )
 
@@ -23,13 +25,13 @@ func NewWeatherUseCase(weatherRepository entity.WeatherRepositoryInterface) *Wea
 	return &WeatherUseCase{WeatherRepository: weatherRepository}
 }
 
-func (w *WeatherUseCase) ForwardZipcode(input ForwardZipcodeInput) (ForwardZipcodeOutput, error) {
+func (w *WeatherUseCase) ForwardZipcode(ctx context.Context, input ForwardZipcodeInput) (ForwardZipcodeOutput, error) {
 	zipCodeEntity, err := entity.NewZipcode(input.Zipcode)
 	if err != nil {
 		return ForwardZipcodeOutput{}, err
 	}
 
-	weatherDto, err := w.WeatherRepository.GetByZipcode(zipCodeEntity.Cep)
+	weatherDto, err := w.WeatherRepository.GetByZipcode(ctx, zipCodeEntity.Cep)
 
 	if err != nil {
 		return ForwardZipcodeOutput{}, err

@@ -44,7 +44,7 @@ func (h *WebWeatherHandler) ZipcodeHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	weatherUseCase := usecase.NewWeatherUseCase(h.WeatherRepository)
-	forwardZipcodeOutput, err := weatherUseCase.ForwardZipcode(useCaseInput)
+	forwardZipcodeOutput, err := weatherUseCase.ForwardZipcode(r.Context(), useCaseInput)
 	if err != nil {
 		if err.Error() == "invalid zipcode" {
 			http.Error(w, "invalid zipcode", http.StatusUnprocessableEntity)

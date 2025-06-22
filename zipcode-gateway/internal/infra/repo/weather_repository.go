@@ -1,10 +1,13 @@
 package repo
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type WeatherResponse struct {
@@ -22,9 +25,17 @@ func NewWeatherRepository(apiURL string) *WeatherRepository {
 	return &WeatherRepository{WeatherAPIURL: apiURL}
 }
 
-func (r *WeatherRepository) GetByZipcode(cep string) (WeatherResponse, error) {
+func (r *WeatherRepository) GetByZipcode(ctx context.Context, cep string) (WeatherResponse, error) {
 	url := fmt.Sprintf("%s/zipcode/%s/weather", r.WeatherAPIURL, cep)
-	resp, err := http.Get(url)
+	client := http.Client{
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return WeatherResponse{}, err
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return WeatherResponse{}, err
 	}

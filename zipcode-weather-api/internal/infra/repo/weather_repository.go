@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/zaccaron07/goexpert-weather-api-lab02/zipcode-weather-api/internal/entity"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type WeatherResponse struct {
@@ -27,14 +29,19 @@ func NewWeatherRepository(apiKey string) *WeatherRepository {
 	return &WeatherRepository{APIKey: apiKey}
 }
 
-func (r *WeatherRepository) GetByCityName(cityName string) (entity.Weather, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+func (r *WeatherRepository) GetByCityName(ctx context.Context, cityName string) (entity.Weather, error) {
+	ctx, span := otel.Tracer("").Start(ctx, "WeatherAPI Lookup")
+	span.SetAttributes(attribute.String("city", cityName))
+	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
 	defer cancel()
 
 	encodedCityName := url.QueryEscape(cityName)
 	url := fmt.Sprintf("http://api.weatherapi.com/v1/current.json?key=%s&q=%s", r.APIKey, encodedCityName)
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
+		span.RecordError(err)
 		log.Printf("Failed to initialize request: %v", err)
 		return entity.Weather{}, err
 	}
@@ -42,6 +49,7 @@ func (r *WeatherRepository) GetByCityName(cityName string) (entity.Weather, erro
 	client := http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
+		span.RecordError(err)
 		log.Printf("Request failed: %v", err)
 		return entity.Weather{}, err
 	}
@@ -49,6 +57,7 @@ func (r *WeatherRepository) GetByCityName(cityName string) (entity.Weather, erro
 
 	resp, err := io.ReadAll(res.Body)
 	if err != nil {
+		span.RecordError(err)
 		log.Printf("Error reading the response: %v", err)
 		return entity.Weather{}, err
 	}
@@ -56,6 +65,7 @@ func (r *WeatherRepository) GetByCityName(cityName string) (entity.Weather, erro
 	var weatherResponse WeatherResponse
 	err = json.Unmarshal(resp, &weatherResponse)
 	if err != nil {
+		span.RecordError(err)
 		log.Printf("Error parsing response: %v", err)
 		return entity.Weather{}, err
 	}

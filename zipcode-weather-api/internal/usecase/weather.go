@@ -1,6 +1,10 @@
 package usecase
 
-import "github.com/zaccaron07/goexpert-weather-api-lab02/zipcode-weather-api/internal/entity"
+import (
+	"context"
+
+	"github.com/zaccaron07/goexpert-weather-api-lab02/zipcode-weather-api/internal/entity"
+)
 
 type WeatherInput struct {
 	CityName string
@@ -20,8 +24,8 @@ func NewGetWeatherUseCase(weatherRepository entity.WeatherRepositoryInterface) *
 		WeatherRepository: weatherRepository,
 	}
 }
-func (c *GetWeatherUseCase) Execute(input WeatherInput) (WeatherOutput, error) {
-	weather, err := c.WeatherRepository.GetByCityName(input.CityName)
+func (c *GetWeatherUseCase) Execute(ctx context.Context, input WeatherInput) (WeatherOutput, error) {
+	weather, err := c.WeatherRepository.GetByCityName(ctx, input.CityName)
 	if err != nil {
 		return WeatherOutput{}, err
 	}

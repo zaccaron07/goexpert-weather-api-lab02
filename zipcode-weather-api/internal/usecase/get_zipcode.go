@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/zaccaron07/goexpert-weather-api-lab02/zipcode-weather-api/internal/entity"
 )
 
@@ -25,13 +27,13 @@ func NewGetZipcodeUseCase(zipcodeRepository entity.ZipcodeRepositoryInterface) *
 	}
 }
 
-func (c *GetZipcodeUseCase) Execute(input ZipcodeInput) (ZipcodeOutput, error) {
+func (c *GetZipcodeUseCase) Execute(ctx context.Context, input ZipcodeInput) (ZipcodeOutput, error) {
 	zipcode, err := entity.NewZipcode(input.CEP)
 	if err != nil {
 		return ZipcodeOutput{}, err
 	}
 
-	zipcodeDto, err := c.ZipcodeRepository.Get(zipcode.CEP)
+	zipcodeDto, err := c.ZipcodeRepository.Get(ctx, zipcode.CEP)
 	if err != nil {
 		return ZipcodeOutput{}, err
 	}
