@@ -41,8 +41,7 @@ services:
     volumes:
       - ./docker-config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
-      - "4318:4318"   # OTLP HTTP
-      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"
     networks:
       - weather-api
     depends_on:

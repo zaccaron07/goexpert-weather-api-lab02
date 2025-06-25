@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/zaccaron07/goexpert-weather-api-lab02/zipcode-gateway/internal/entity"
 	"github.com/zaccaron07/goexpert-weather-api-lab02/zipcode-gateway/internal/infra/repo"
@@ -46,11 +47,15 @@ func (h *WebWeatherHandler) ZipcodeHandler(w http.ResponseWriter, r *http.Reques
 	weatherUseCase := usecase.NewWeatherUseCase(h.WeatherRepository)
 	forwardZipcodeOutput, err := weatherUseCase.ForwardZipcode(r.Context(), useCaseInput)
 	if err != nil {
-		if err.Error() == "invalid zipcode" {
-			http.Error(w, "invalid zipcode", http.StatusUnprocessableEntity)
+		if strings.TrimSpace(err.Error()) == "invalid zipcode" {
+			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 			return
 		}
-		http.Error(w, "error fetching weather data", http.StatusInternalServerError)
+		if strings.TrimSpace(err.Error()) == "can not find zipcode" {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 

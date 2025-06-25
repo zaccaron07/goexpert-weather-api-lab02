@@ -41,10 +41,12 @@ func (r *WeatherRepository) GetByZipcode(ctx context.Context, cep string) (entit
 		return entity.Weather{}, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return entity.Weather{}, fmt.Errorf("service returned status %d", resp.StatusCode)
-	}
+
 	body, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return entity.Weather{}, fmt.Errorf("%s", string(body))
+	}
 
 	var apiResp weatherAPIResponse
 	if err := json.Unmarshal(body, &apiResp); err != nil {
