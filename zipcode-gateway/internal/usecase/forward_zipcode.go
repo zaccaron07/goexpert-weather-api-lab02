@@ -31,17 +31,16 @@ func (w *WeatherUseCase) ForwardZipcode(ctx context.Context, input ForwardZipcod
 		return ForwardZipcodeOutput{}, err
 	}
 
-	weatherDto, err := w.WeatherRepository.GetByZipcode(ctx, zipCodeEntity.Cep)
-
+	weather, err := w.WeatherRepository.GetByZipcode(ctx, zipCodeEntity.Cep)
 	if err != nil {
 		return ForwardZipcodeOutput{}, err
 	}
 
 	forwardZipcodeOutput := ForwardZipcodeOutput{
-		CityName:              weatherDto.CityName,
-		TemperatureCelsius:    weatherDto.TemperatureCelsius,
-		TemperatureFahrenheit: weatherDto.TemperatureFahrenheit,
-		TemperatureKelvin:     weatherDto.TemperatureKelvin,
+		CityName:              weather.CityName,
+		TemperatureCelsius:    weather.TemperatureCelsius,
+		TemperatureFahrenheit: weather.TemperatureFahrenheit,
+		TemperatureKelvin:     weather.TemperatureKelvin,
 	}
 
 	return forwardZipcodeOutput, nil

@@ -7,10 +7,11 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/zaccaron07/goexpert-weather-api-lab02/zipcode-gateway/internal/entity"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-type WeatherResponse struct {
+type weatherAPIResponse struct {
 	CityName              string  `json:"city"`
 	TemperatureCelsius    float64 `json:"temp_C"`
 	TemperatureFahrenheit float64 `json:"temp_F"`
@@ -25,7 +26,7 @@ func NewWeatherRepository(apiURL string) *WeatherRepository {
 	return &WeatherRepository{WeatherAPIURL: apiURL}
 }
 
-func (r *WeatherRepository) GetByZipcode(ctx context.Context, cep string) (WeatherResponse, error) {
+func (r *WeatherRepository) GetByZipcode(ctx context.Context, cep string) (entity.Weather, error) {
 	url := fmt.Sprintf("%s/zipcode/%s/weather", r.WeatherAPIURL, cep)
 	client := http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
@@ -33,21 +34,26 @@ func (r *WeatherRepository) GetByZipcode(ctx context.Context, cep string) (Weath
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return WeatherResponse{}, err
+		return entity.Weather{}, err
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return WeatherResponse{}, err
+		return entity.Weather{}, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return WeatherResponse{}, fmt.Errorf("service returned status %d", resp.StatusCode)
+		return entity.Weather{}, fmt.Errorf("service returned status %d", resp.StatusCode)
 	}
 	body, _ := io.ReadAll(resp.Body)
 
-	var w WeatherResponse
-	if err := json.Unmarshal(body, &w); err != nil {
-		return WeatherResponse{}, err
+	var apiResp weatherAPIResponse
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return entity.Weather{}, err
 	}
-	return w, nil
+	return entity.Weather{
+		CityName:              apiResp.CityName,
+		TemperatureCelsius:    apiResp.TemperatureCelsius,
+		TemperatureFahrenheit: apiResp.TemperatureFahrenheit,
+		TemperatureKelvin:     apiResp.TemperatureKelvin,
+	}, nil
 }
